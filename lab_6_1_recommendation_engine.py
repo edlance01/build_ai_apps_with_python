@@ -72,24 +72,50 @@ Cosine similarity vs. Euclidean distance: Cosine similarity is preferred here be
 fit_transform: fit builds the vocabulary from the data; transform applies it. Calling both together with fit_transform is standard practice when working with a single dataset.
 """
 
-# a function that returns recommendations
+
 def recommend_movie(title, data, sim_matrix):
+    """
+    Returns a list of 3 movie recommendations based on content similarity.
+
+    Args:
+        title (str):       The movie title to base recommendations on.
+        data (DataFrame):  A pandas DataFrame with at least a "title" column.
+        sim_matrix:        A 2D similarity matrix (e.g. cosine similarity) where
+                           sim_matrix[i][j] is the similarity score between movie i and j.
+    Returns:
+        list[str]: A list of 3 recommended movie titles, or an error message.
+    """
+
+    # Guard clause: make sure the requested title exists in the dataset
     if title not in data["title"].values:
         return ["Movie not found."]
-    
+
+    # Get the row index of the requested movie in the DataFrame
     index = data[data["title"] == title].index[0]
+
+    # Retrieve the similarity scores for this movie against all others,
+    # keeping track of each movie's index with enumerate()
     scores = list(enumerate(sim_matrix[index]))
+
+    # Sort movies by similarity score in descending order (most similar first)
     scores = sorted(scores, key=lambda x: x[1], reverse=True)
 
     recommendations = []
 
+    # Slice [1:4] to skip the first result (the movie itself, which always has
+    # a perfect similarity score of 1.0) and grab the next 3 most similar movies
     for i, score in scores[1:4]:
         recommendations.append(data.iloc[i]["title"])
-    
+
     return recommendations
 
+
+# --- Example usage ---
+
+# Find movies similar to "Star Quest" using the prebuilt movies DataFrame
+# and the precomputed similarity matrix
 result = recommend_movie("Star Quest", movies, similarity)
 
 print("Because you liked Star Quest:")
 for item in result:
-    print("-", item)
+    print("-", item)  # Print each recommendation on its own line
